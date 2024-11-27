@@ -1,2 +1,2 @@
-# boz-python-cookbook
-My Python Cookbook
+# python-cookbook
+Python Cookbook
