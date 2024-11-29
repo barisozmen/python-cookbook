@@ -1,12 +1,10 @@
-class Counter:
-    _instance = None
+from metaclasses import Singleton
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Counter, cls).__new__(cls)
-            cls._instance.count = 0
-        return cls._instance
-
+class Counter(metaclass=Singleton):
+    def __init__(self):
+        self.count = 0
+        
+    @property
     def next_id(self):
         self.count += 1
         return self.count
