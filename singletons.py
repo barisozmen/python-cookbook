@@ -1,6 +1,6 @@
-from metaclasses import Singleton
+from metaclasses import SingletonMetaclass
 
-class Counter(metaclass=Singleton):
+class Counter(metaclass=SingletonMetaclass):
     def __init__(self):
         self.count = 0
         
