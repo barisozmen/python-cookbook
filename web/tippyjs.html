@@ -1,0 +1,49 @@
+<html>
+	<head>
+		<title>
+			Tippy.js Demo
+		</title>
+		<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
+			
+		
+	</head>
+	<body>
+		<style>
+			
+.hovery {
+    /* Center the element */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+		</style>
+		<div class="hovery" data-tippy-content="Tippy.js is working!">
+			Hover over me
+		</div>
+		<script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js">
+			
+		</script>
+		<script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js">
+			
+		</script>
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js">
+			
+		</script>
+		<script>
+			
+tippy('[data-tippy-content]', {
+    allowHTML: true,
+    theme: 'light',
+    placement: 'top',
+    interactive: true,
+    // Add these for text wrapping:
+    animation: 'fade',
+    inlinePositioning: true,
+});
+
+		</script>
+	</body>
+</html>
+
