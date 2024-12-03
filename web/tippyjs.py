@@ -44,5 +44,7 @@ raw = (
     )
 )
     
+
 html = render_html(raw)
 print(html)
+# Run: python tippyjs.py > tippyjs.html
