@@ -51,11 +51,16 @@ def picture(world, Xs: range, Ys: range) -> str:
 
 world = make_random_world(10, 0.2)
 
-for _ in range(10):
-    print(f'Generation {_}')
-    print(picture(world, range(15), range(15)))
-    world = next_generation(world)
-    print('\n')
+sys.path.append('<path_to_stackobserver>')
+print(sys.path)
+from stackobserver import StackObserver
+
+with StackObserver():
+    for _ in range(1):
+        print(f'Generation {_}')
+        print(picture(world, range(15), range(15)))
+        world = next_generation(world)
+        print('\n')
     
     
 """ Output after running `python3 conways_game_of_life.py`
