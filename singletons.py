@@ -18,4 +18,4 @@ class Config(metaclass=SingletonMetaclass):
         self._settings[key] = value
         
     def get(self, key, default=None):
-        return self._settings.get(key, default)
+        return self._settings.get(key, default) 
