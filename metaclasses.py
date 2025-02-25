@@ -45,3 +45,12 @@ class LoggedMetaclass(type):
             print(f'Finished: {func.__name__}')
             return result
         return wrapper
+
+
+class StaticMethodsByDefault(type):
+    def __new__(cls, name, bases, attrs):
+        # Make all methods static by default, except special methods
+        for key, value in attrs.items():
+            if callable(value) and not key.startswith('__'):
+                attrs[key] = staticmethod(value)
+        return super().__new__(cls, name, bases, attrs)
