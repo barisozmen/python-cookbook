@@ -49,8 +49,8 @@ class Binding:
 class Task:
     fn: str
     id: str = ''
-    args: list[Binding] = []
-    kwargs: dict[str, Binding] = {}
+    args: list[Binding] = field(default_factory=list)
+    kwargs: dict[str, Binding] = field(default_factory=dict)
     postprocess: Callable = make_identity()
     ready: bool = False
     completed: bool = False
