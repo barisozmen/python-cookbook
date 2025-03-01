@@ -69,7 +69,6 @@ class Task:
     def __str__(self):
         return f'{self.name} - {self.fn.__name__}()'
     
-    
 def say_hello(): return 'Hello, World!'
 def say_another(): return 'Another hello world'
 def add_thanks(x): return f'{x} thanks'
@@ -297,9 +296,6 @@ def detect_circular_dependencies(tasks):
 
 
 
-
-
-
 def mark_tasks_whose_dependencies_are_satisfied_as_ready(tasks):
     """Marks tasks whose dependencies are satisfied as ready."""
     for task in tasks:
@@ -313,13 +309,13 @@ def make_runner(task):
         return task.fn(*task.fn_args, **task.fn_kwargs)
     return runner
 
-def run_graph(tasks):
+def run_graph(tasks, max_workers=10):
     detect_circular_dependencies(tasks)
     print('no circular dependency detected')
     print_task_graph_summary(tasks)
     
     
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_task = {}
         
         def run_ready_tasks():
