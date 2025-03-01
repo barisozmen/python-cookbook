@@ -14,6 +14,7 @@ def flatten(l):
 
 
 
+
 def test_flatten():
     # Basic nested list
     assert flatten([1, [2, [3, 4]], 5]) == [1, 2, 3, 4, 5]
@@ -29,6 +30,5 @@ def test_flatten():
     assert flatten([1, 2, 3, 4, 5]) == [1, 2, 3, 4, 5]
     print('test_flatten passed')
     
-    
-    
-[f() for f in locals().copy().values() if callable(f) and f.__name__.startswith('test_')]
+if __name__ == '__main__':
+    [f() for f in globals().copy().values() if callable(f) and f.__name__.startswith('test_')]
