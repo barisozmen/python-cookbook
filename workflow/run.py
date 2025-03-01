@@ -45,7 +45,22 @@ def run_graph(tasks, max_workers=10):
         while future_to_task:
             for future in as_completed(future_to_task): # Wait for the next completed future
                 task = future_to_task.pop(future)
-                task.output = future.result()
+                result = future.result()
+                
+                # Handle streaming results
+                if hasattr(result, '__iter__') and not isinstance(result, (str, bytes, dict)):
+                    # For iterable results (like generators)
+                    chunks = []
+                    for chunk in result:
+                        chunks.append(chunk)
+                        if task.yielder:
+                            yield chunk, f"{task.name}:chunk"
+                    task.output = ''.join(chunks)
+                else:
+                    # For non-iterable results
+                    task.output = result
+                
+                
                 task.completed = True
                 mark_tasks_whose_dependencies_are_satisfied_as_ready(tasks)
                 run_ready_tasks()
