@@ -12,6 +12,13 @@ def flatten(l):
             result.append(item)
     return result
 
+# https://youtu.be/RZ4Sn-Y7AP8?t=1353
+import sys, difflib
+def diff(fromfile, tofile):
+    fromlines = open(fromfile).readlines()
+    tolines = open(tofile).readlines()
+    diff = difflib.context_diff(fromlines, tolines, fromfile, tofile)
+    sys.stdout.writelines(diff)
 
 
 
