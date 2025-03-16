@@ -24,10 +24,6 @@ def render(world):
     
     
     
-
-    
-    
-    
 import pygame
 import math
 
@@ -106,18 +102,26 @@ class World:
 
 
 
-
-
 class ExternalWorldConnection:
-    def handle_events(self):
-        ...
-    def render(self, world):
-        ...
-
-
+    def handle_events(self): ...
+    def render(self, world): ...
 
 
 class PyGameExternal(ExternalWorldConnection):
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((800, 600))
+        self.rect_color = (255, 0, 0)
+        pygame.display.set_caption("Game Window")
+        
+    def render(self, world):
+        self.screen.fill(world.bg_color) # clear the screen
+        for entity in world.entities:
+            # self.screen.blit(entity.image, entity.position) # draw the entity
+            pygame.draw.rect(self.screen, entity.rect_color,
+                        (entity.rect_x - 25, entity.rect_y - 25, 50, 50))
+        pygame.display.flip() # update the screen
+
     def handle_events(self):
         for event in pygame.event.get():
             match event.type:
@@ -132,12 +136,6 @@ class PyGameExternal(ExternalWorldConnection):
                     match event.key:
                         case pygame.K_LEFT | pygame.K_RIGHT: STOP_HORIZONTAL_MOVE.send(PLAYER)
                         case pygame.K_UP | pygame.K_DOWN:    STOP_VERTICAL_MOVE.send(PLAYER)
-    
-    def render(self, world):
-        self.screen.fill(world.bg_color) # clear the screen
-        for entity in world.entities:
-            self.screen.blit(entity.image, entity.position) # draw the entity
-        pygame.display.flip() # update the screen
 
 
 
@@ -145,7 +143,6 @@ class PyGameExternal(ExternalWorldConnection):
 def update(world, delta_time):
     for entity in world.entities:
         entity.update(delta_time)
-
 
     
 def make_iterate(handle_events, update, render):
