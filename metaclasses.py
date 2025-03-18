@@ -54,3 +54,7 @@ class StaticMethodsByDefault(type):
             if callable(value) and not key.startswith('__'):
                 attrs[key] = staticmethod(value)
         return super().__new__(cls, name, bases, attrs)
+    
+    
+def copy_class(cls, new_name):
+    return type(new_name, cls.__bases__, dict(cls.__dict__))
