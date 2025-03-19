@@ -78,6 +78,13 @@ class SquareGeoComponent(GeoComponent):
         super().__init__(x, y, rotation)
         self.width = width
         self.height = width
+        
+class PathFlagComponent(Component):
+    def __init__(self, flag: str):
+        super().__init__()
+        self.flag = flag
+        
+
 
 class TerrainModel:
     def __init__(self, type, image_index, width):
@@ -110,13 +117,17 @@ class Entity:
         self.name = name
         self.components: Dict[type, Component] = {}
     
-    def add_component(self, component: Component):
+    def add_component(self, component):
         """Add a component to this entity."""
         component_type = type(component)
         self.components[component_type] = component
         component.attach(self)
         return component
     
+    def with_component(self, component):
+        self.add_component(component)
+        return self
+
     def get_component(self, component_type: type) -> Component:
         """Get a component by its type."""
         return self.components.get(component_type)
@@ -307,37 +318,73 @@ class Map:
             for j, char in enumerate(row):
                 x, y = self.resolve_from_grid_index(j), self.resolve_from_grid_index(i)
 
-                cls = self.symbol_to_class[char]
-                assert issubclass(cls, MapEntity)
+                if char.islower():
+                    cls = Road
+                else:
+                    cls = self.symbol_to_class[char]
+                    
                 model = random.choice(self.models[cls])
-                yield cls(model, x, y)
+                entity = cls(model, x, y)
+                if char.islower():
+                    entity.add_component(PathFlagComponent(char))
+                yield entity
+        
+    @property
+    def spawner_pos(self):
+        for entity in self.entities:
+            if isinstance(entity, Spawner):
+                return entity.geo.x, entity.geo.y
+        raise ValueError('No spawner found')
+    
+    @property
+    def gate_pos(self):
+        for entity in self.entities:
+            if isinstance(entity, Gate):
+                return entity.geo.x, entity.geo.y
+        raise ValueError('No gate found')
+
+
+
+class OrcBreed:
+    def __init__(self, max_health, damage, speed):
+        self.max_health = max_health
+        self.damage = damage
+        self.speed = speed
+        
+    def new_monster(self, color, path):
+        orc = Orc(self.max_health, self.damage, self.speed)
+        orc.add_component(GeoComponent(path[0][0], path[0][1]))
+        orc.add_component(RenderImageComponent(orc.geo, image=pygame.image.load(Standardize.cls_to_asset_dir_path(Orc) / f'{color}.png')))
+        return orc
+        
         
 
 
+ascii_map = '''
+##########################
+##########################
+S....................a.###
+S....................b.###
+#####################..###
+#####################..###
+####e.................c###
+####.f...............d.###
+####..####################
+####..####################
+####..####################
+####..####################
+####g.................j.##
+####.h.................i##
+######################..##
+######################..##
+######################..##
+######################..##
+######################..##
+G.....................k.##
+G......................l##
+##########################'''
 
-map = Map('''
-##########################
-##########################
-SS.....................###
-SS.....................###
-#####################..###
-#####################..###
-####...................###
-####...................###
-####..####################
-####..####################
-####..####################
-####..####################
-####....................##
-####....................##
-######################..##
-######################..##
-######################..##
-######################..##
-######################..##
-GG......................##
-GG......................##
-##########################''', grid_size=32)
+map = Map(ascii_map, grid_size=32)
 
 render_system = RenderSystem(size=(map.width, map.height))
 game = Game(render_system)
@@ -347,14 +394,16 @@ for entity in map.generate():
 
 
 orc_paths = [
-    [
-        map.spawner_pos,
-        (0, 1),
-        (0, 2),
-        (0, 3),
-        (0, 4),
-        map.gate_pos,
-    ]
+    [map.spawner_pos, 'a', 'c', 'e', 'h','i','k', map.gate_pos,],
+    [map.spawner_pos, 'a', 'd', 'f', 'g','i','k', map.gate_pos,],
+    [map.spawner_pos, 'a', 'c', 'e', 'h','i','l', map.gate_pos,],
+    [map.spawner_pos, 'a', 'c', 'f', 'g','i','k', map.gate_pos,],
+    [map.spawner_pos, 'b', 'd', 'e', 'g','j','l', map.gate_pos,],
+    [map.spawner_pos, 'b', 'c', 'e', 'g','j','k', map.gate_pos,],
+    [map.spawner_pos, 'b', 'd', 'e', 'h','j','l', map.gate_pos,],
+    [map.spawner_pos, 'b', 'c', 'f', 'h','i','k', map.gate_pos,],
+    [map.spawner_pos, 'a', 'd', 'f', 'h','i','l', map.gate_pos,],
+    [map.spawner_pos, 'b', 'c', 'f', 'h','i','k', map.gate_pos,],
 ]
 
 # type object pattern

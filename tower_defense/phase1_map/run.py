@@ -36,7 +36,7 @@ def number_of_assets_by_type(type):
     pattern = str(Standardize.cls_to_asset_dir_path(type) / '[0-9]*.png')
     return len(glob.glob(pattern))
 
-class Component():
+class Component:
     """Base component class that all components will inherit from."""
     def __init__(self):
         self.entity = None
@@ -143,7 +143,6 @@ class Spawner(MapEntity): ...
 class Gate(MapEntity): ...
 
 
-
 class RenderComponent(Component):
     def __init__(self, geo):
         super().__init__()
@@ -231,7 +230,6 @@ def reporter():
         time_recorder.clear()
         
 
-
 class Game:
     def __init__(self, render_system, fps=60):
         self.entities: List[Entity] = []
@@ -308,10 +306,7 @@ class Map:
                 model = random.choice(self.models[cls])
                 yield cls(model, x, y)
         
-
-
-
-map = Map('''
+ascii_map = '''
 ##########################
 ##########################
 SS.....................###
@@ -333,7 +328,9 @@ SS.....................###
 ######################..##
 GG......................##
 GG......................##
-##########################''', grid_size=32)
+##########################'''
+
+map = Map(ascii_map, grid_size=32)
 
 render_system = RenderSystem(size=(map.width, map.height))
 game = Game(render_system)
