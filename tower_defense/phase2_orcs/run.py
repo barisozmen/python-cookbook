@@ -5,209 +5,27 @@ Design patterns used:
 - Singleton
 - Factory
 '''
-
-
-from ast import Dict
 from collections import defaultdict
 import random
 import sys
 from pathlib import Path
-import re
 import glob
 import time
-from typing import List
+from functools import lru_cache
+from contextlib import contextmanager
 
 import pygame
 
+from component import *
+from render_system import *
+from entity import *
+from helpers import *
+from command import *
+from managers import *
 
-sys.path.append(str(Path(__file__).parent.parent))
-sys.path.append(str(Path(__file__).parent.parent.parent))
-sys.path.append(str(Path(__file__).parent.parent.parent.parent))
-from metaclasses import SingletonMetaclass
-
-
-class Standardize:
-    @staticmethod
-    def cls_to_asset_dir_path(cls):
-        return  Path(__file__).parent.parent / 'assets'  / cls.__name__.lower()
+sys.path.append(str(Path(__file__).parent.parent)); sys.path.append(str(Path(__file__).parent.parent.parent)) ;sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 
-def number_of_assets_by_type(type):
-    pattern = str(Standardize.cls_to_asset_dir_path(type) / '[0-9]*.png')
-    return len(glob.glob(pattern))
-
-class Component():
-    """Base component class that all components will inherit from."""
-    def __init__(self):
-        self.entity = None
-        
-    def attach(self, entity):
-        self.entity = entity
-        
-    def update(self, delta_time: float): ...
-
-class GeoComponent(Component):
-    """Component that handles position, rotation, and scale."""
-    
-    def __init__(self, x, y, rotation= 0, unit_speed_ppx= 300, vx= 0, vy= 0):
-        super().__init__()
-        self.x = x
-        self.y = y
-        self.unit_speed_ppx = unit_speed_ppx
-        self.vx = vx
-        self.vy = vy
-        self.rotation = rotation
-    
-    def update(self, delta_time: float):
-        self.x += self.vx * self.unit_speed_ppx * delta_time
-        self.y += self.vy * self.unit_speed_ppx * delta_time
-    
-    def move(self, dx: float, dy: float):
-        self.x += dx
-        self.y += dy
-        
-    def teleport(self, x: float, y: float):
-        self.x = x
-        self.y = y
-    
-    def rotate(self, angle: float):
-        self.rotation += angle
-
-class SquareGeoComponent(GeoComponent):
-    def __init__(self, x: float = 0, y: float = 0, rotation: float = 0, width: float = 0):
-        super().__init__(x, y, rotation)
-        self.width = width
-        self.height = width
-        
-class PathFlagComponent(Component):
-    def __init__(self, flag: str):
-        super().__init__()
-        self.flag = flag
-        
-
-
-class TerrainModel:
-    def __init__(self, type, image_index, width):
-        self.type = type
-        self.image_index = image_index
-        original_image = pygame.image.load(Standardize.cls_to_asset_dir_path(type) / f'{image_index}.png').convert_alpha()
-        self.image = pygame.transform.scale(original_image, (width, width))
-
-
-class FlyweightFactory(metaclass=SingletonMetaclass):
-    def __init__(self):
-        self.flyweights = {}
-
-    def get_terrain_model(self, terrain_type, image_index, width):
-        key = (terrain_type, image_index)
-        if key not in self.flyweights:
-            self.flyweights[key] = TerrainModel(terrain_type, image_index, width)
-        return self.flyweights[key]
-    
-    def get_terrain_model_list(self, terrain_type, width):
-        n = number_of_assets_by_type(terrain_type)
-        print(f'{terrain_type} has {n} assets')
-        return [self.get_terrain_model(terrain_type, i, width) for i in range(1, n+1)]
-
-
-class Entity:
-    """A game entity composed of various components."""
-    
-    def __init__(self, name: str):
-        self.name = name
-        self.components: Dict[type, Component] = {}
-    
-    def add_component(self, component):
-        """Add a component to this entity."""
-        component_type = type(component)
-        self.components[component_type] = component
-        component.attach(self)
-        return component
-    
-    def with_component(self, component):
-        self.add_component(component)
-        return self
-
-    def get_component(self, component_type: type) -> Component:
-        """Get a component by its type."""
-        return self.components.get(component_type)
-    
-    def get_components_by_instance(self, type):
-        for component in self.components.values():
-            if isinstance(component, type):
-                yield component
-    
-    def update(self, delta_time: float):
-        for component in self.components.values():
-            component.update(delta_time)
-            
-
-class MapEntity(Entity):
-    def __init__(self, model, x, y):
-        super().__init__('map_entity')
-        self.model = model
-        geo = self.add_component(SquareGeoComponent(x, y, 0, model.image.get_width()))
-        self.add_component(RenderImageComponent(geo, image=model.image))
-        
-    def render(self):
-        self.model.render(self.geo)
-
-class Valley(MapEntity): ...
-class Road(MapEntity): ...
-class Spawner(MapEntity): ...
-class Gate(MapEntity): ...
-
-
-
-class RenderComponent(Component):
-    def __init__(self, geo):
-        super().__init__()
-        self.geo = geo
-
-class RenderImageComponent(RenderComponent):
-    def __init__(self, geo, image):
-        super().__init__(geo)
-        self.image = image
-
-    def render(self, screen):
-        if self.geo.rotation != 0:
-            # Rotate the image based on the geo component's rotation
-            rotated_image = pygame.transform.rotate(self.image, -self.geo.rotation)
-            # Get the rect of the rotated image and set its center to match the original center
-            rect = rotated_image.get_rect(center=(self.geo.x + self.image.get_width()//2, 
-                                                 self.geo.y + self.image.get_height()//2))
-            # Draw the rotated image at the adjusted position
-            screen.blit(rotated_image, rect.topleft)
-        else:
-            # If no rotation, render normally
-            screen.blit(self.image, (self.geo.x - self.image.get_width()//2, self.geo.y - self.image.get_height()//2))
-
-class ScreenDebugWrapper:
-    def __init__(self, screen):
-        self.screen = screen
-        
-    def blit(self, *args, **kwargs):
-        # You can log or monitor blit operations here
-        # print(f'screen.blit called with {args} and {kwargs}')
-        return self.screen.blit(*args, **kwargs)
-    
-    def __getattr__(self, attr):
-        # Pass through any other attributes/methods to the original screen
-        return getattr(self.screen, attr)
-
-class RenderSystem:
-    def __init__(self, size):
-        pygame.init()
-        self.screen = pygame.display.set_mode(size)
-        pygame.display.set_caption("Tower Defense Map")
-        self.screen.fill((128, 128, 128))
-        self.screen = ScreenDebugWrapper(self.screen)  # Wrap the screen object
-
-    def render(self, entities):
-        for entity in entities:
-            for component in entity.get_components_by_instance(RenderComponent):
-                component.render(self.screen)
-        pygame.display.flip()
 
 
 time_recorder = defaultdict(list)
@@ -220,8 +38,6 @@ def time_logger(fn):
         return result
     return wrapper
 
-
-from contextlib import contextmanager
 
 @contextmanager
 def reporter():
@@ -244,28 +60,54 @@ def reporter():
             avg_time = sum(time_recorder[key])/len(time_recorder[key])
             print(f"- {key}: {avg_time}")
         time_recorder.clear()
-        
+
+
 
 
 class Game:
-    def __init__(self, render_system, fps=60):
-        self.entities: List[Entity] = []
+    def __init__(self, fps=60):
+        self.entities = []
         self.fps = fps
         self.delta_time = 1.0/fps
-        self.render_system = render_system
+        self.render_system = None
+        self.input_system = None
         self.running = True
+        self.game_over = False
+        GAME_OVER.connect(self.on_game_over)
+        
     
-    def add_entity(self, entity: Entity):
+    def on_game_over(self, *args, **kwargs):
+        print("Game over")
+        self.game_over = True
+    
+    def add_entity(self, entity):
         """Add an entity to the game."""
         self.entities.append(entity)
         return entity
     
     @time_logger
     def input(self):
-        global running
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
+            match event.type:
+                case pygame.QUIT:
+                    self.running = False
+                case pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Left mouse button
+                        mouse_x, mouse_y = pygame.mouse.get_pos()
+                        MOUSE_LEFT_CLICK.send((mouse_x, mouse_y))
+                        
+                case pygame.MOUSEBUTTONUP:
+                    if event.button == 1:  # Left mouse button
+                        mouse_x, mouse_y = pygame.mouse.get_pos()
+                        MOUSE_LEFT_RELEASE.send((mouse_x, mouse_y))
+                        
+                case pygame.MOUSEMOTION:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    MOUSE_MOTION.send((mouse_x, mouse_y))
+                    
+                case pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        GAME_RESTART.send()
     
     @time_logger
     def update(self):
@@ -277,6 +119,10 @@ class Game:
     def render(self):
         self.render_system.render(self.entities)
         
+        if self.game_over: self.render_system.render_game_over_message("Game Over - Press R to Restart")
+        
+        self.render_system.flip()
+        
     def report(self):
         self.reporter.report()
         
@@ -284,9 +130,15 @@ class Game:
         while self.running:
             with reporter():
                 self.input()
-                self.update()
+                if not self.game_over:
+                    self.update()
                 self.render()
-            pygame.time.Clock().tick(self.fps)  # Limit to 60 frames per second
+            
+            if self.game_over:
+                pygame.time.Clock().tick(10)  # Limit to 60 frames per second
+            else:
+                pygame.time.Clock().tick(self.fps)  # Limit to 60 frames per second
+        
         pygame.quit()
 
 class Map:
@@ -294,8 +146,9 @@ class Map:
     num_cols = None
     models = None
     symbol_to_class = {
-        '#': Valley, '.': Road,
-        'S': Spawner,'G': Gate
+        '#': 'valley', '.': 'road',
+        'S': 'spawner','G': 'gate',
+        'O': 'placement', '0': 'placement',
     }
     def __init__(self, map, grid_size):
         self.rows = [x for x in map.split('\n') if x.strip()]
@@ -304,120 +157,153 @@ class Map:
         self.grid_size = grid_size
         self.width = self.num_cols*self.grid_size
         self.height = self.num_rows*self.grid_size
-        
-    def init_models(self):
-        self.models = {cls: FlyweightFactory().get_terrain_model_list(terrain_type=cls, width=self.grid_size) 
-                        for cls in self.symbol_to_class.values()}
+        self.spawners = []
+        self.gates = []
+        self.flags = {}
+    def init_terrain_breeds(self):
+        valley_breeds = [TerrainBreed('valley', i) for i in range(1, 3)]
+        road_breeds = [TerrainBreed('road', i) for i in range(1, 8)]
+        spawner_breeds = [TerrainBreed('spawner', i) for i in range(1, 2)]
+        gate_breeds = [TerrainBreed('gate', i) for i in range(1, 2)]
+        placement_breeds = [TerrainBreed('placement', i) for i in range(1, 2)]
+        self.terrain_breeds = {
+            'valley': valley_breeds,
+            'road': road_breeds,
+            'spawner': spawner_breeds,
+            'gate': gate_breeds,
+            'placement': placement_breeds,
+        }
         
     def resolve_from_grid_index(self, _):
         return _*self.grid_size + (self.grid_size//2)
         
     def generate(self):
-        self.init_models()
+        self.init_terrain_breeds()
         for i, row in enumerate(self.rows):
             for j, char in enumerate(row):
                 x, y = self.resolve_from_grid_index(j), self.resolve_from_grid_index(i)
 
-                if char.islower():
-                    cls = Road
-                else:
-                    cls = self.symbol_to_class[char]
+                terrain_type = 'road' if char.islower() else self.symbol_to_class[char]
                     
-                model = random.choice(self.models[cls])
-                entity = cls(model, x, y)
+                breed = random.choice(self.terrain_breeds[terrain_type])
+                entity = breed.produce(x, y)
                 if char.islower():
                     entity.add_component(PathFlagComponent(char))
+                    self.flags[char] = entity.pos()
+                elif terrain_type == 'spawner':
+                    self.spawners.append(entity)
+                    self.flags['S'] = entity.pos()
+                elif terrain_type == 'gate':
+                    self.gates.append(entity)
+                    self.flags['G'] = entity.pos()
                 yield entity
         
     @property
-    def spawner_pos(self):
-        for entity in self.entities:
-            if isinstance(entity, Spawner):
-                return entity.geo.x, entity.geo.y
-        raise ValueError('No spawner found')
+    def spawner_pos(self, i=0):
+        spawner = self.spawners[i]
+        geo = spawner.get_component(SquareGeoComponent)
+        return geo.x, geo.y
     
     @property
-    def gate_pos(self):
-        for entity in self.entities:
-            if isinstance(entity, Gate):
-                return entity.geo.x, entity.geo.y
-        raise ValueError('No gate found')
+    def gate_pos(self, i=0):
+        gate = self.gates[i]
+        geo = gate.get_component(SquareGeoComponent)
+        return geo.x, geo.y
+    
 
 
+class BottomMenu:
+    def __init__(self):
+        self.height = 100
+        
+class UpperMenu:
+    def __init__(self):
+        self.height = 50
+        
+        
+        
+        
 
-class OrcBreed:
-    def __init__(self, max_health, damage, speed):
-        self.max_health = max_health
-        self.damage = damage
-        self.speed = speed
-        
-    def new_monster(self, color, path):
-        orc = Orc(self.max_health, self.damage, self.speed)
-        orc.add_component(GeoComponent(path[0][0], path[0][1]))
-        orc.add_component(RenderImageComponent(orc.geo, image=pygame.image.load(Standardize.cls_to_asset_dir_path(Orc) / f'{color}.png')))
-        return orc
-        
-        
 
 
 ascii_map = '''
 ##########################
-##########################
-S....................a.###
-S....................b.###
-#####################..###
-#####################..###
-####e.................c###
-####.f...............d.###
-####..####################
-####..####################
-####..####################
-####..####################
-####g.................j.##
-####.h.................i##
-######################..##
-######################..##
-######################..##
-######################..##
-######################..##
+#000000000000000000000####
+#000000000000000000000####
+S....................a.00#
+S....................b.00#
+#0000OOOOOOOOOOOOOOOO..00#
+#0000OOOOOOOOOOOOOOOO..00#
+####e.................c00#
+####.f...............d.00#
+#00#..000000000000000000##
+#00#..000000000000000000##
+#00#..000000000000000000##
+#00#..####################
+#00#g.................j.##
+#00#.h.................i##
+#0OOOOOOOOOOOOOOOOOOOO..##
+##OOOOOOOOOOOOOOOOOOOO..##
+##OOOOOOOOOOOOOOOOOOOO..##
+##OOOOOOOOOOOOOOOOOOOO..##
+##OOOOOOOOOOOOOOOOOOOO..##
 G.....................k.##
 G......................l##
 ##########################'''
 
 map = Map(ascii_map, grid_size=32)
 
-render_system = RenderSystem(size=(map.width, map.height))
-game = Game(render_system)
+bottom_menu = BottomMenu()
+upper_menu = UpperMenu()
+
+
+game = Game(fps=30)
+game.render_system = RenderSystem(size=(map.width, map.height+bottom_menu.height+upper_menu.height))
+
+
 
 for entity in map.generate():
     game.add_entity(entity)
 
 
 orc_paths = [
-    [map.spawner_pos, 'a', 'c', 'e', 'h','i','k', map.gate_pos,],
-    [map.spawner_pos, 'a', 'd', 'f', 'g','i','k', map.gate_pos,],
-    [map.spawner_pos, 'a', 'c', 'e', 'h','i','l', map.gate_pos,],
-    [map.spawner_pos, 'a', 'c', 'f', 'g','i','k', map.gate_pos,],
-    [map.spawner_pos, 'b', 'd', 'e', 'g','j','l', map.gate_pos,],
-    [map.spawner_pos, 'b', 'c', 'e', 'g','j','k', map.gate_pos,],
-    [map.spawner_pos, 'b', 'd', 'e', 'h','j','l', map.gate_pos,],
-    [map.spawner_pos, 'b', 'c', 'f', 'h','i','k', map.gate_pos,],
-    [map.spawner_pos, 'a', 'd', 'f', 'h','i','l', map.gate_pos,],
-    [map.spawner_pos, 'b', 'c', 'f', 'h','i','k', map.gate_pos,],
+    ['S', 'a', 'c', 'e', 'h','i','k', 'G',],
+    ['S', 'a', 'd', 'f', 'g','i','k', 'G',],
+    ['S', 'a', 'c', 'e', 'h','i','l', 'G',],
+    ['S', 'a', 'c', 'f', 'g','i','k', 'G',],
+    ['S', 'b', 'd', 'e', 'g','j','l', 'G',],
+    ['S', 'b', 'c', 'e', 'g','j','k', 'G',],
+    ['S', 'b', 'd', 'e', 'h','j','l', 'G',],
+    ['S', 'b', 'c', 'f', 'h','i','k', 'G',],
+    ['S', 'a', 'd', 'f', 'h','i','l', 'G',],
+    ['S', 'b', 'c', 'f', 'h','i','k', 'G',],
 ]
 
+
+
 # type object pattern
-small_orc_breed = OrcBreed(max_health=10, damage=1, speed=100)
-# medium_orc_breed = OrcBreed(max_health=20, damage=2, speed=80)
+small_orc_breed = OrcBreed(type='small', max_health=100, damage=1, speed=300)
+medium_orc_breed = OrcBreed(type='medium', max_health=500, damage=2, speed=100)
 # large_orc_breed = OrcBreed(max_health=30, damage=3, speed=40)
 
-for _ in range(10):
-    orc = small_orc_breed.new_monster(
-        color=random.choice(['red', 'green', 'blue']),
-        path=random.choice(orc_paths)
-    )
-    orc.get_component(GeoComponent).teleport(map.spawner_pos)
+for _ in range(100):
+    orc = small_orc_breed.produce(random.choice(orc_paths), map=map)
+    orc.teleport(*jitter(*map.spawner_pos, amount=40))
     game.add_entity(orc)
+    
+for _ in range(10):
+    orc = medium_orc_breed.produce(random.choice(orc_paths), map=map)
+    orc.teleport(*jitter(*map.spawner_pos, amount=40))
+    game.add_entity(orc)
+
+
+
+gate_manager = GateManager(game)
+gold_manager = GoldManager(game)
+orc_manager = OrcManager(game)
+
+
+game.add_entity(HUD(gate_manager=gate_manager, gold_manager=gold_manager))
 
 
 game.loop()
