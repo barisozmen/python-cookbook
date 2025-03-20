@@ -20,55 +20,6 @@ class TextComponent(Component):
         self.color = color
 
 
-class SpeedControlButton(Component):
-    def __init__(self, pos, frames_per_change, signal, reset=False):
-        self.pos = pos
-        self.frames_per_change = frames_per_change
-        self.signal = signal
-        self.reset = reset
-        signal.connect(self.do)
-    def do(self, *args, pos=None, **kwargs):
-        if within_grid(pos, self.pos):
-            CHANGE_GAME_OF_LIFE_SPEED.send(frames_per_change=self.frames_per_change)
-   
-class TogglePauseButton(Component):
-    def __init__(self, pos, signal):
-        self.pos = pos
-        self.signal = signal
-        signal.connect(self.do)
-        self.paused = False
-    def do(self, *args, pos=None, **kwargs):
-        if within_grid(pos, self.pos):
-            self.paused = not self.paused
-            if self.paused:
-                CHANGE_GAME_OF_LIFE_SPEED.send(frames_per_change=-1)
-            else:
-                CHANGE_GAME_OF_LIFE_SPEED.send(frames_per_change=30)
-
-# Create control buttons
-pause_button = Entity(
-    (pos := Position(x=750, y=20, width=120, height=40)),
-    (text := TextComponent(text="Pause", font_size=20, color=light_gray)),
-    Renderable(pos=pos, color=button_blue),
-    TogglePauseButton(pos, MOUSE_LEFT_CLICK, ),
-    id='pause_button',
-)
-
-speed_up_button = Entity(
-    (pos := Position(x=750, y=70, width=120, height=40)),
-    (text := TextComponent(text="Speed Up", font_size=20, color=light_gray)),
-    Renderable(pos=pos, color=button_blue),
-    SpeedControlButton(pos, 10, MOUSE_LEFT_CLICK),
-    id='speed_up_button',
-)
-
-slow_down_button = Entity(
-    (pos := Position(x=750, y=120, width=120, height=40)),
-    (text := TextComponent(text="Slow Down", font_size=20, color=light_gray)),
-    Renderable(pos=pos, color=button_blue),
-    SpeedControlButton(pos, 180, MOUSE_LEFT_CLICK),
-    id='slow_down_button',
-)
 
 
 class PygameMonitorSystem(System):
@@ -100,6 +51,7 @@ class PygameMonitorSystem(System):
             self.screen.blit(rendered_text, position)
         
 
+
 game_of_life = BasicGame(
     *[Entity(
         (pos := Position(x=10+i*20, y=10+j*20, width=16, height=16)),
@@ -109,13 +61,9 @@ game_of_life = BasicGame(
         ToggleAllLiveable(liveable, HALLOWEEN_BUTTON_CLICK),
         id='cell_'+str(i)+'_'+str(j),
     ) for i in range(40) for j in range(40)],
-    pause_button,
-    speed_up_button,
-    slow_down_button,
     PyGameInputSystem(),
     GameOfLifeSystem(),
     PygameRenderAliveSystem(alive_color=light_green, dead_color=dark_green),
-    # ButtonRenderSystem(),
     PyGameRenderSystem(bg_color=black, screen_size=(900, 900)),
     PygameMonitorSystem(),
     PygameDisplayFlipSystem(),
