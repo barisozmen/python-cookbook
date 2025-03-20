@@ -9,6 +9,15 @@ class SingletonMetaclass(type):
         return cls._instances[cls]
     
     
+class SingletonByArgsMetaclass(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        key = (cls, tuple(args), tuple(kwargs.items()))
+        if key not in cls._instances:
+            cls._instances[key] = super().__call__(*args, **kwargs)
+        return cls._instances[key]
+    
+    
 class GracefulInterruptMetaclass(type):
     def __new__(cls, name, bases, attrs):
         # Wrap all public methods with graceful_keyboard_interrupt
