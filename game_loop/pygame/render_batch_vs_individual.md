@@ -1,0 +1,53 @@
+https://x.com/i/grok/share/oa03baeL1rFTpHXh8dXGURmYB
+
+
+render_batch.py
+```
+Time taken: 0.00019598007202148438 seconds
+Time taken: 0.0001819133758544922 seconds
+Time taken: 0.0001838207244873047 seconds
+Time taken: 0.00023603439331054688 seconds
+Time taken: 0.00021696090698242188 seconds
+Time taken: 0.00021314620971679688 seconds
+Time taken: 0.00019097328186035156 seconds
+Time taken: 0.0001900196075439453 seconds
+Time taken: 0.00019311904907226562 seconds
+Time taken: 0.00018405914306640625 seconds
+Time taken: 0.0001842975616455078 seconds
+Time taken: 0.00019097328186035156 seconds
+Time taken: 0.0002720355987548828 seconds
+Time taken: 0.00018405914306640625 seconds
+Time taken: 0.00023293495178222656 seconds
+Time taken: 0.00025081634521484375 seconds
+Time taken: 0.0002231597900390625 seconds
+Time taken: 0.00019288063049316406 seconds
+Time taken: 0.0002570152282714844 seconds
+Time taken: 0.00022792816162109375 seconds
+Time taken: 0.0002377033233642578 seconds
+```
+
+
+render_individual.py
+```
+Time taken: 0.00025391578674316406 seconds
+Time taken: 0.00019311904907226562 seconds
+Time taken: 0.00020813941955566406 seconds
+Time taken: 0.0002391338348388672 seconds
+Time taken: 0.00022292137145996094 seconds
+Time taken: 0.00022602081298828125 seconds
+Time taken: 0.00021719932556152344 seconds
+Time taken: 0.0002028942108154297 seconds
+Time taken: 0.00019407272338867188 seconds
+Time taken: 0.00018310546875 seconds
+Time taken: 0.0002009868621826172 seconds
+Time taken: 0.00019598007202148438 seconds
+Time taken: 0.000209808349609375 seconds
+Time taken: 0.00020313262939453125 seconds
+Time taken: 0.000186920166015625 seconds
+Time taken: 0.0001919269561767578 seconds
+Time taken: 0.00016927719116210938 seconds
+Time taken: 0.0001628398895263672 seconds
+Time taken: 0.00015878677368164062 seconds
+Time taken: 0.0001800060272216797 seconds
+Time taken: 0.00019478797912597656 seconds
+```
