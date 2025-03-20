@@ -307,13 +307,3 @@ game.add_entity(HUD(gate_manager=gate_manager, gold_manager=gold_manager))
 
 
 game.loop()
-
-
-
-
-
-
-
-
-
-
