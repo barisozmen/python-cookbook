@@ -8,7 +8,7 @@ class Piece:
         self.has_moved = False
 
     def __repr__(self):
-        return self.color + self.kind
+        return self.kind if self.color=='W' else self.kind.lower()
 
 class ChessBoard:
     def __init__(self):
@@ -182,8 +182,14 @@ class ChessBoard:
         self.board, self.turn, self.castling_rights, self.en_passant_target, self.halfmove_clock, self.fullmove_number = self.move_history.pop()
 
     def print_board(self):
+        
+        NX = 33
+        
+        print('\n' + '-'*NX)
         for row in self.board:
-            print(' '.join([str(p) if p else '--' for p in row]))
+            print('| ', end='')
+            print(' '.join([str(p) + ' |' if p else '. |' for p in row]))
+            print('-'*NX)
         print(f"Turn: {self.turn}")
         print(f"Castling rights: {self.castling_rights}")
         print(f"En passant target: {self.en_passant_target}")
