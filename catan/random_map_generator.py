@@ -1,5 +1,6 @@
 # https://chatgpt.com/share/68a40488-7bac-8010-936b-947515a13172
 # https://en.wikipedia.org/wiki/Catan
+# This webapp runs an equivalent logic to generate catan maps. https://jkirschner.github.io/catan-randomizer/ 
 
 import random
 
