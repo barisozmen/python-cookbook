@@ -24,3 +24,4 @@ def find(topdir, pattern):
     return ((path, name)
             for path, name in allfiles(topdir)
             if fnmatch(name, pattern))
+
